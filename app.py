@@ -1,18 +1,14 @@
 import streamlit as st
-import cv2
-import numpy as np
 import pandas as pd
 from datetime import datetime, date
 import sqlite3
-import tempfile
 import os
 from PIL import Image
-import easyocr
 import json
-import openai
 import base64
 from io import BytesIO
-import requests
+from openai import OpenAI
+import re
 
 # Initialize EasyOCR reader
 @st.cache_resource
