@@ -188,33 +188,93 @@ def extract_asset_tags_and_weights(image):
     }
 
 def extract_asset_tags_ocr(image):
-    """Extract text from image using OCR"""
-    reader = load_ocr_reader()
-
-    # Convert PIL image to numpy array
-    if isinstance(image, Image.Image):
-        image = np.array(image)
-
-    # Use EasyOCR to detect text
-    results = reader.readtext(image)
-
-    detected_tags = []
-    for (bbox, text, confidence) in results:
-        # Filter for likely asset tags (adjust patterns as needed)
-        text = text.strip().upper()
-        if confidence > 0.5 and (
-                text.startswith('GYM') or
-                text.startswith('ASS') or
-                text.startswith('EQ') or
-                len(text) >= 4 and text.isalnum()
-        ):
-            detected_tags.append({
-                'tag': text,
-                'confidence': confidence,
-                'bbox': bbox
-            })
-
-    return detected_tags
+    """Extract asset tags from image using OpenAI Vision API"""
+    client = get_openai_client()
+    if not client:
+        return []
+    
+    try:
+        # Convert image to base64
+        base64_image = encode_image_to_base64(image)
+        
+        # Create prompt for asset tag detection
+        prompt = """
+        You are an expert at identifying asset tags, barcodes, and equipment labels in gym equipment images.
+        
+        Please analyze this image and identify any asset tags, equipment labels, serial numbers, or identification codes.
+        Look for:
+        - Asset tags (often start with GYM, ASS, EQ, or similar prefixes)
+        - Barcodes with text underneath
+        - Equipment serial numbers
+        - Model numbers
+        - Any alphanumeric codes that could be used for tracking
+        
+        Return the results as a JSON array with this format:
+        [
+            {
+                "tag": "extracted tag/code",
+                "confidence": 0.95,
+                "type": "asset_tag" or "barcode" or "serial_number" or "model_number",
+                "location": "description of where the tag appears in the image"
+            }
+        ]
+        
+        Only include tags that are clearly visible and readable. Provide confidence scores from 0.0 to 1.0.
+        If no asset tags are found, return an empty array [].
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=800,
+            temperature=0.1
+        )
+        
+        # Parse the response
+        content = response.choices[0].message.content
+        
+        # Try to extract JSON from the response
+        try:
+            # Look for JSON array in the response
+            json_match = re.search(r'\[.*\]', content, re.DOTALL)
+            if json_match:
+                detected_tags = json.loads(json_match.group())
+                # Convert to the expected format for compatibility
+                formatted_tags = []
+                for tag in detected_tags:
+                    formatted_tags.append({
+                        'tag': tag.get('tag', '').strip().upper(),
+                        'confidence': tag.get('confidence', 0.8),
+                        'type': tag.get('type', 'unknown'),
+                        'location': tag.get('location', 'unknown')
+                    })
+                return formatted_tags
+            else:
+                return []
+        except json.JSONDecodeError:
+            # If no valid JSON found, return empty list
+            return []
+            
+    except Exception as e:
+        st.error(f"Error extracting asset tags: {str(e)}")
+        return []
 
 # Database operations
 def add_asset(asset_data):
