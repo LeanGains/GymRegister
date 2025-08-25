@@ -9,6 +9,10 @@ import os
 from PIL import Image
 import easyocr
 import json
+import openai
+import base64
+from io import BytesIO
+import requests
 
 # Initialize EasyOCR reader
 @st.cache_resource
