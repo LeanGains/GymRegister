@@ -19,6 +19,134 @@ import requests
 def load_ocr_reader():
     return easyocr.Reader(['en'])
 
+# OpenAI Configuration
+def setup_openai():
+    """Setup OpenAI client with API key from Streamlit secrets or environment"""
+    try:
+        # Try to get API key from Streamlit secrets first
+        if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
+            openai.api_key = st.secrets['OPENAI_API_KEY']
+        else:
+            # Fallback to environment variable
+            openai.api_key = os.getenv('OPENAI_API_KEY')
+        
+        if not openai.api_key:
+            st.error("OpenAI API key not found. Please set OPENAI_API_KEY in secrets or environment variables.")
+            return False
+        return True
+    except Exception as e:
+        st.error(f"Error setting up OpenAI: {e}")
+        return False
+
+def encode_image_to_base64(image):
+    """Convert PIL image to base64 string for OpenAI API"""
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return img_str
+
+def identify_weight_with_openai(image):
+    """Use OpenAI GPT-4 Vision to identify weights in gym equipment images"""
+    if not setup_openai():
+        return None
+    
+    try:
+        # Convert image to base64
+        base64_image = encode_image_to_base64(image)
+        
+        # Create the prompt for weight identification
+        prompt = """
+        You are an expert gym equipment identifier. Analyze this image and identify any weights or gym equipment visible.
+        
+        Please provide a JSON response with the following structure:
+        {
+            "equipment_detected": [
+                {
+                    "type": "dumbbell/barbell_plate/kettlebell/medicine_ball/other",
+                    "weight": "weight in lbs or kg (specify unit)",
+                    "confidence": "high/medium/low",
+                    "description": "brief description of the equipment",
+                    "condition": "excellent/good/fair/poor (if visible)",
+                    "location_in_image": "description of where in the image"
+                }
+            ],
+            "total_items": "number of items detected",
+            "image_quality": "excellent/good/fair/poor",
+            "recommendations": "suggestions for better image capture if needed"
+        }
+        
+        Focus on:
+        - Identifying specific weights (look for numbers on dumbbells, plates, kettlebells)
+        - Equipment type classification
+        - Condition assessment if visible
+        - Multiple items in the same image
+        
+        If no weights are clearly visible, indicate this in the response.
+        """
+        
+        response = openai.ChatCompletion.create(
+            model="gpt-4-vision-preview",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=1000,
+            temperature=0.1
+        )
+        
+        # Parse the response
+        response_text = response.choices[0].message.content
+        
+        # Try to extract JSON from the response
+        try:
+            # Find JSON in the response (it might be wrapped in markdown)
+            import re
+            json_match = re.search(r'```json\s*({.*?})\s*```', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                # Try to find JSON without markdown
+                json_match = re.search(r'{.*}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                else:
+                    json_str = response_text
+            
+            result = json.loads(json_str)
+            return result
+            
+        except json.JSONDecodeError:
+            # If JSON parsing fails, return a structured response with the raw text
+            return {
+                "equipment_detected": [],
+                "total_items": 0,
+                "image_quality": "unknown",
+                "raw_response": response_text,
+                "error": "Failed to parse JSON response"
+            }
+            
+    except Exception as e:
+        st.error(f"Error with OpenAI vision analysis: {e}")
+        return {
+            "equipment_detected": [],
+            "total_items": 0,
+            "error": str(e)
+        }
+
 # Database setup
 def init_database():
     conn = sqlite3.connect('gym_assets.db')
@@ -52,7 +180,20 @@ def init_database():
     conn.close()
 
 # OCR functions
-def extract_asset_tags(image):
+def extract_asset_tags_and_weights(image):
+    """Extract both asset tags using OCR and identify weights using OpenAI Vision"""
+    # Get OCR results for asset tags
+    ocr_results = extract_asset_tags_ocr(image)
+    
+    # Get OpenAI vision results for weight identification
+    vision_results = identify_weight_with_openai(image)
+    
+    return {
+        "asset_tags": ocr_results,
+        "weight_analysis": vision_results
+    }
+
+def extract_asset_tags_ocr(image):
     """Extract text from image using OCR"""
     reader = load_ocr_reader()
 
