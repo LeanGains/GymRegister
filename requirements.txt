@@ -2,3 +2,7 @@ streamlit
 pandas
 pillow
 numpy
+opencv-python
+easyocr
+openai
+requests
