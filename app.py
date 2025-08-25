@@ -40,7 +40,8 @@ def encode_image_to_base64(image):
 
 def identify_weight_with_openai(image):
     """Use OpenAI GPT-4 Vision to identify weights in gym equipment images"""
-    if not setup_openai():
+    client = get_openai_client()
+    if not client:
         return None
     
     try:
