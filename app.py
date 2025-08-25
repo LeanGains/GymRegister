@@ -78,7 +78,7 @@ def identify_weight_with_openai(image):
         If no weights are clearly visible, indicate this in the response.
         """
         
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
                 {
