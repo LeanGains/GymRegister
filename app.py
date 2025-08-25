@@ -10,29 +10,26 @@ from io import BytesIO
 from openai import OpenAI
 import re
 
-# Initialize EasyOCR reader
+# Initialize OpenAI client
 @st.cache_resource
-def load_ocr_reader():
-    return easyocr.Reader(['en'])
-
-# OpenAI Configuration
-def setup_openai():
-    """Setup OpenAI client with API key from Streamlit secrets or environment"""
+def get_openai_client():
+    """Get OpenAI client with API key from Streamlit secrets or environment"""
     try:
         # Try to get API key from Streamlit secrets first
         if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
-            openai.api_key = st.secrets['OPENAI_API_KEY']
+            api_key = st.secrets['OPENAI_API_KEY']
         else:
             # Fallback to environment variable
-            openai.api_key = os.getenv('OPENAI_API_KEY')
+            api_key = os.getenv('OPENAI_API_KEY')
         
-        if not openai.api_key:
+        if not api_key:
             st.error("OpenAI API key not found. Please set OPENAI_API_KEY in secrets or environment variables.")
-            return False
-        return True
+            return None
+        
+        return OpenAI(api_key=api_key)
     except Exception as e:
         st.error(f"Error setting up OpenAI: {e}")
-        return False
+        return None
 
 def encode_image_to_base64(image):
     """Convert PIL image to base64 string for OpenAI API"""
