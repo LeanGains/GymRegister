@@ -1,3 +1,5 @@
+from os import getenv
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date
@@ -10,23 +12,24 @@ from io import BytesIO
 from openai import OpenAI
 import re
 
+API_KEY = os,getenv('OPENAI_API_KEY')
 # Initialize OpenAI client
 @st.cache_resource
 def get_openai_client():
     """Get OpenAI client with API key from Streamlit secrets or environment"""
     try:
         # Try to get API key from Streamlit secrets first
-        if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
-            api_key = st.secrets['OPENAI_API_KEY']
-        else:
-            # Fallback to environment variable
-            api_key = os.getenv('OPENAI_API_KEY')
+        # if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
+        #     api_key = st.secrets['OPENAI_API_KEY']
+        # else:
+        #     # Fallback to environment variable
+        #     api_key = os.getenv('OPENAI_API_KEY')
+        #
+        # if not api_key:
+        #     st.error("OpenAI API key not found. Please set OPENAI_API_KEY in secrets or environment variables.")
+        #     return None
         
-        if not api_key:
-            st.error("OpenAI API key not found. Please set OPENAI_API_KEY in secrets or environment variables.")
-            return None
-        
-        return OpenAI(api_key=api_key)
+        return OpenAI(api_key=API_KEY)
     except Exception as e:
         st.error(f"Error setting up OpenAI: {e}")
         return None
