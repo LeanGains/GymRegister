@@ -293,12 +293,12 @@ def main():
 
     init_database()
 
-    st.title("🏋️ Gym Asset Registry - GPT-4o Powered")
+    st.title("🏋️ Gym Asset Registry - AI Powered")
 
     # Memory controls
     col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
-        st.markdown("**Powered by GPT-4o** - Advanced gym equipment and asset tag detection")
+        st.markdown("**Powered by AI ** - Advanced gym equipment and asset tag detection")
     with col2:
         if st.button("🧹 Clear Memory"):
             for key in list(st.session_state.keys()):
@@ -321,7 +321,7 @@ def main():
 
     if page == "📷 Equipment Scanner":
         st.header("🤖 AI Equipment Scanner")
-        st.markdown("Take a photo to detect equipment and asset tags using GPT-4o")
+        st.markdown("Take a photo to detect equipment and asset tags using AI")
 
         # Camera input - RESTORED and prioritized
         st.subheader("📱 Take Photo")
@@ -353,8 +353,8 @@ def main():
                 display_image.close()
 
                 # Analysis button
-                if st.button("🚀 Analyze with GPT-4o", type="primary", use_container_width=True):
-                    with st.spinner("GPT-4o analyzing image... This may take 10-20 seconds..."):
+                if st.button("🚀 Analyze Image", type="primary", use_container_width=True):
+                    with st.spinner("Analyzing image... This may take 10-20 seconds..."):
                         analysis_result = analyze_gym_equipment_with_gpt4o(original_image)
 
                     # Store analysis result in session state to persist across interactions
