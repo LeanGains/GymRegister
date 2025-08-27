@@ -28,7 +28,7 @@ def get_openai_client():
         # if not api_key:
         #     st.error("OpenAI API key not found. Please set OPENAI_API_KEY in secrets or environment variables.")
         #     return None
-        
+        print("Open AI API Key found, setting up client.", API_KEY)
         return OpenAI(api_key=API_KEY)
     except Exception as e:
         st.error(f"Error setting up OpenAI: {e}")
@@ -95,7 +95,7 @@ def identify_weight_with_openai(image):
         """
         
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview",
+            model="gpt-4o",
             messages=[
                 {
                     "role": "user",
@@ -240,7 +240,7 @@ def extract_asset_tags_ocr(image):
         """
         
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview",
+            model="gpt-4o",
             messages=[
                 {
                     "role": "user",
@@ -425,7 +425,7 @@ def main():
                             st.warning("No asset tags detected. Try a clearer image or better lighting.")
                 
                 with col_scan2:
-                    if st.button("🤖 AI Weight Identification", type="primary"):
+                    if st.button("🤖 Identify Weights", type="primary"):
                         with st.spinner("Analyzing image with AI to identify weights..."):
                             vision_results = identify_weight_with_openai(image)
 
@@ -447,93 +447,91 @@ def main():
                             # Display detected equipment
                             for i, equipment in enumerate(vision_results['equipment_detected']):
                                 with st.expander(f"{equipment.get('type', 'Unknown').title()}: {equipment.get('weight', 'Unknown weight')} (Confidence: {equipment.get('confidence', 'unknown').title()})"):
-                                    col_eq1, col_eq2 = st.columns(2)
-                                    
-                                    with col_eq1:
-                                        st.write(f"**Type:** {equipment.get('type', 'Unknown').title()}")
-                                        st.write(f"**Weight:** {equipment.get('weight', 'Not specified')}")
-                                        st.write(f"**Description:** {equipment.get('description', 'No description')}")
-                                        st.write(f"**Location in Image:** {equipment.get('location_in_image', 'Not specified')}")
-                                        if equipment.get('condition'):
-                                            st.write(f"**Condition:** {equipment.get('condition').title()}")
-                                    
-                                    with col_eq2:
-                                        st.subheader("Quick Register")
+                                    st.write(f"**Type:** {equipment.get('type', 'Unknown').title()}")
+                                    st.write(f"**Weight:** {equipment.get('weight', 'Not specified')}")
+                                    st.write(f"**Description:** {equipment.get('description', 'No description')}")
+                                    st.write(f"**Location in Image:** {equipment.get('location_in_image', 'Not specified')}")
+                                    if equipment.get('condition'):
+                                        st.write(f"**Condition:** {equipment.get('condition').title()}")
+
+                                    st.markdown("---")
+                                    st.subheader("Quick Register")
+
                                         
-                                        # Pre-fill form with AI-detected information
-                                        suggested_tag = st.text_input(
-                                            "Asset Tag", 
-                                            placeholder=f"Enter tag for {equipment.get('type', 'item')}",
-                                            key=f"ai_tag_{i}"
-                                        )
-                                        
-                                        # Auto-select equipment type based on AI detection
-                                        equipment_types = ["Dumbbell", "Barbell Plate", "Kettle Bell", "Resistance Band", "Medicine Ball", "Jump Rope", "Yoga Mat", "Foam Roller", "Other"]
-                                        detected_type = equipment.get('type', '').lower()
-                                        
-                                        # Map AI detected types to our categories
-                                        type_mapping = {
-                                            'dumbbell': 'Dumbbell',
-                                            'barbell_plate': 'Barbell Plate', 
-                                            'kettlebell': 'Kettle Bell',
-                                            'medicine_ball': 'Medicine Ball'
-                                        }
-                                        
-                                        default_type_index = 0
-                                        if detected_type in type_mapping:
-                                            try:
-                                                default_type_index = equipment_types.index(type_mapping[detected_type])
-                                            except ValueError:
-                                                default_type_index = 0
-                                        
-                                        selected_type = st.selectbox(
-                                            "Equipment Type",
-                                            equipment_types,
-                                            index=default_type_index,
-                                            key=f"ai_type_{i}"
-                                        )
-                                        
-                                        location_input = st.text_input(
-                                            "Location",
-                                            placeholder="e.g., Free Weight Area - Rack 3",
-                                            key=f"ai_location_{i}"
-                                        )
-                                        
-                                        # Auto-fill condition if detected
-                                        condition_options = ["Excellent", "Good", "Fair", "Poor", "Needs Repair"]
-                                        condition_index = 0
-                                        if equipment.get('condition'):
-                                            detected_condition = equipment['condition'].title()
-                                            if detected_condition in condition_options:
-                                                condition_index = condition_options.index(detected_condition)
-                                        
-                                        selected_condition = st.selectbox(
-                                            "Condition",
-                                            condition_options,
-                                            index=condition_index,
-                                            key=f"ai_condition_{i}"
-                                        )
-                                        
-                                        if st.button(f"Register This Item", key=f"ai_register_{i}", type="primary"):
-                                            if suggested_tag and selected_type and location_input:
-                                                asset_data = (
-                                                    suggested_tag.upper(),
-                                                    selected_type,
-                                                    equipment.get('description', f"AI-detected {selected_type}"),
-                                                    location_input,
-                                                    datetime.now(),
-                                                    "Active",
-                                                    equipment.get('weight', ''),
-                                                    selected_condition,
-                                                    f"Registered via AI detection. Confidence: {equipment.get('confidence', 'unknown')}"
-                                                )
-                                                
-                                                if add_asset(asset_data):
-                                                    st.success(f"Asset {suggested_tag} registered successfully!")
-                                                else:
-                                                    st.error("Failed to register asset")
+                                    # Pre-fill form with AI-detected information
+                                    suggested_tag = st.text_input(
+                                        "Asset Tag",
+                                        placeholder=f"Enter tag for {equipment.get('type', 'item')}",
+                                        key=f"ai_tag_{i}"
+                                    )
+
+                                    # Auto-select equipment type based on AI detection
+                                    equipment_types = ["Dumbbell", "Barbell Plate", "Kettle Bell", "Resistance Band", "Medicine Ball", "Jump Rope", "Yoga Mat", "Foam Roller", "Other"]
+                                    detected_type = equipment.get('type', '').lower()
+
+                                    # Map AI detected types to our categories
+                                    type_mapping = {
+                                        'dumbbell': 'Dumbbell',
+                                        'barbell_plate': 'Barbell Plate',
+                                        'kettlebell': 'Kettle Bell',
+                                        'medicine_ball': 'Medicine Ball'
+                                    }
+
+                                    default_type_index = 0
+                                    if detected_type in type_mapping:
+                                        try:
+                                            default_type_index = equipment_types.index(type_mapping[detected_type])
+                                        except ValueError:
+                                            default_type_index = 0
+
+                                    selected_type = st.selectbox(
+                                        "Equipment Type",
+                                        equipment_types,
+                                        index=default_type_index,
+                                        key=f"ai_type_{i}"
+                                    )
+
+                                    location_input = st.text_input(
+                                        "Location",
+                                        placeholder="e.g., Free Weight Area - Rack 3",
+                                        key=f"ai_location_{i}"
+                                    )
+
+                                    # Auto-fill condition if detected
+                                    condition_options = ["Excellent", "Good", "Fair", "Poor", "Needs Repair"]
+                                    condition_index = 0
+                                    if equipment.get('condition'):
+                                        detected_condition = equipment['condition'].title()
+                                        if detected_condition in condition_options:
+                                            condition_index = condition_options.index(detected_condition)
+
+                                    selected_condition = st.selectbox(
+                                        "Condition",
+                                        condition_options,
+                                        index=condition_index,
+                                        key=f"ai_condition_{i}"
+                                    )
+
+                                    if st.button(f"Register This Item", key=f"ai_register_{i}", type="primary"):
+                                        if suggested_tag and selected_type and location_input:
+                                            asset_data = (
+                                                suggested_tag.upper(),
+                                                selected_type,
+                                                equipment.get('description', f"AI-detected {selected_type}"),
+                                                location_input,
+                                                datetime.now(),
+                                                "Active",
+                                                equipment.get('weight', ''),
+                                                selected_condition,
+                                                f"Registered via AI detection. Confidence: {equipment.get('confidence', 'unknown')}"
+                                            )
+
+                                            if add_asset(asset_data):
+                                                st.success(f"Asset {suggested_tag} registered successfully!")
                                             else:
-                                                st.error("Please fill in Asset Tag, Equipment Type, and Location")
+                                                st.error("Failed to register asset")
+                                        else:
+                                            st.error("Please fill in Asset Tag, Equipment Type, and Location")
                         
                         elif vision_results and vision_results.get('error'):
                             st.error(f"AI Analysis Error: {vision_results['error']}")
