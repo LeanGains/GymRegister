@@ -552,25 +552,21 @@ def main():
                     
                     # Display combined results
                     if combined_results:
-                        col_combined1, col_combined2 = st.columns(2)
+                        st.subheader("🔍 Asset Tags Found (OCR)")
+                        asset_tags = combined_results.get('asset_tags', [])
+                        if asset_tags:
+                            for tag in asset_tags:
+                                st.write(f"• {tag['tag']} (Confidence: {tag['confidence']:.2f})")
+                        else:
+                            st.write("No asset tags detected")
                         
-                        with col_combined1:
-                            st.subheader("🔍 Asset Tags Found (OCR)")
-                            asset_tags = combined_results.get('asset_tags', [])
-                            if asset_tags:
-                                for tag in asset_tags:
-                                    st.write(f"• {tag['tag']} (Confidence: {tag['confidence']:.2f})")
-                            else:
-                                st.write("No asset tags detected")
-                        
-                        with col_combined2:
-                            st.subheader("🤖 Equipment Identified (AI)")
-                            weight_analysis = combined_results.get('weight_analysis', {})
-                            if weight_analysis and weight_analysis.get('equipment_detected'):
-                                for eq in weight_analysis['equipment_detected']:
-                                    st.write(f"• {eq.get('type', 'Unknown').title()}: {eq.get('weight', 'Unknown weight')}")
-                            else:
-                                st.write("No equipment detected")
+                        st.subheader("🤖 Equipment Identified (AI)")
+                        weight_analysis = combined_results.get('weight_analysis', {})
+                        if weight_analysis and weight_analysis.get('equipment_detected'):
+                            for eq in weight_analysis['equipment_detected']:
+                                st.write(f"• {eq.get('type', 'Unknown').title()}: {eq.get('weight', 'Unknown weight')}")
+                        else:
+                            st.write("No equipment detected")
 
     elif page == "➕ Register New Asset":
         st.header("Register New Asset")
