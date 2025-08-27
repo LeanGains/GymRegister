@@ -37,7 +37,20 @@ def get_openai_client():
 def encode_image_to_base64(image):
     """Convert PIL image to base64 string for OpenAI API"""
     buffered = BytesIO()
-    image.save(buffered, format="JPEG")
+    
+    # Convert RGBA to RGB if necessary (JPEG doesn't support transparency)
+    if image.mode in ('RGBA', 'LA', 'P'):
+        # Create a white background
+        background = Image.new('RGB', image.size, (255, 255, 255))
+        if image.mode == 'P':
+            image = image.convert('RGBA')
+        background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+        image = background
+    elif image.mode not in ('RGB', 'L'):
+        # Convert other modes to RGB
+        image = image.convert('RGB')
+    
+    image.save(buffered, format="JPEG", quality=95)
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return img_str
 
