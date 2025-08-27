@@ -357,6 +357,14 @@ def main():
                     with st.spinner("GPT-4o analyzing image... This may take 10-20 seconds..."):
                         analysis_result = analyze_gym_equipment_with_gpt4o(original_image)
 
+                    # Store analysis result in session state to persist across interactions
+                    st.session_state.analysis_result = analysis_result
+                    st.session_state.image_analyzed = True
+
+                # Display results if we have them (from current analysis or previous)
+                analysis_result = st.session_state.get('analysis_result', {})
+                if st.session_state.get('image_analyzed', False) and analysis_result:
+
                     if analysis_result.get('error'):
                         st.error(f"Analysis Error: {analysis_result['error']}")
                         if analysis_result.get('raw_response'):
@@ -410,7 +418,6 @@ def main():
                                             if new_location != existing[4]:
                                                 if update_asset_location(tag_text, new_location, "Updated from scanner"):
                                                     st.success("Location updated!")
-                                                    st.rerun()
                                     else:
                                         st.warning("⚠️ This asset tag is not in the database yet.")
 
@@ -418,6 +425,10 @@ def main():
                         equipment_list = analysis_result.get('equipment', [])
                         if equipment_list:
                             st.subheader("🏋️ Equipment Detected")
+
+                            # Initialize registered items tracker in session state
+                            if 'registered_items' not in st.session_state:
+                                st.session_state.registered_items = set()
 
                             for i, equipment in enumerate(equipment_list):
                                 eq_type = equipment.get('type', 'unknown')
@@ -427,7 +438,14 @@ def main():
                                 suggested_tag = equipment.get('suggested_asset_tag', '')
                                 location_in_image = equipment.get('location_in_image', '')
 
-                                with st.expander(f"Equipment {i+1}: {eq_type.title().replace('_', ' ')} - {weight}"):
+                                # Check if this item was already registered
+                                item_key = f"item_{i}"
+                                is_registered = item_key in st.session_state.registered_items
+
+                                status_icon = "✅" if is_registered else "📦"
+                                status_text = " (REGISTERED)" if is_registered else ""
+
+                                with st.expander(f"{status_icon} Equipment {i+1}: {eq_type.title().replace('_', ' ')} - {weight}{status_text}"):
                                     # Equipment details
                                     st.write(f"**Type:** {eq_type.title().replace('_', ' ')}")
                                     st.write(f"**Weight:** {weight}")
@@ -435,11 +453,16 @@ def main():
                                     st.write(f"**Condition:** {condition.title()}")
                                     st.write(f"**Location in image:** {location_in_image}")
 
-                                    st.markdown("---")
-                                    st.subheader("🏷️ Register This Equipment")
+                                    if is_registered:
+                                        st.success("✅ This item has been registered!")
+                                        if st.button(f"Register Another Copy", key=f"register_copy_{i}"):
+                                            st.session_state.registered_items.discard(item_key)
+                                            st.rerun()
+                                    else:
+                                        st.markdown("---")
+                                        st.subheader("🏷️ Register This Equipment")
 
-                                    # Registration form
-                                    with st.form(f"register_form_{i}"):
+                                        # Registration form - NO st.form to prevent page refresh
                                         reg_col1, reg_col2 = st.columns(2)
 
                                         with reg_col1:
@@ -504,13 +527,13 @@ def main():
                                             key=f"notes_{i}"
                                         )
 
-                                        register_button = st.form_submit_button(
-                                            f"✅ Register {eq_type.title().replace('_', ' ')}",
-                                            type="primary",
-                                            use_container_width=True
-                                        )
-
-                                        if register_button:
+                                        # Regular button instead of form submit button
+                                        if st.button(
+                                                f"✅ Register {eq_type.title().replace('_', ' ')}",
+                                                type="primary",
+                                                key=f"register_btn_{i}",
+                                                use_container_width=True
+                                        ):
                                             if not asset_tag_input or not location_input:
                                                 st.error("Please fill in Asset Tag and Location")
                                             else:
@@ -533,14 +556,23 @@ def main():
 
                                                     if add_asset(asset_data):
                                                         st.success(f"🎉 Successfully registered: {asset_tag_input}!")
+                                                        # Mark this item as registered
+                                                        st.session_state.registered_items.add(item_key)
                                                         st.balloons()
-                                                        # Clear the form by rerunning
+                                                        # Rerun to update the display
                                                         st.rerun()
                                                     else:
                                                         st.error("Failed to register asset. Please try again.")
 
                         else:
                             st.warning("No equipment detected in the image.")
+
+                        # Clear analysis button to reset
+                        if st.button("🔄 Analyze New Image", use_container_width=True):
+                            st.session_state.analysis_result = {}
+                            st.session_state.image_analyzed = False
+                            st.session_state.registered_items = set()
+                            st.rerun()
 
                 # Cleanup original image
                 original_image.close()
