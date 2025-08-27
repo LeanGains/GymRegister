@@ -12,7 +12,7 @@ from io import BytesIO
 from openai import OpenAI
 import re
 
-API_KEY = os,getenv('OPENAI_API_KEY')
+API_KEY = os.getenv('OPENAI_API_KEY')
 # Initialize OpenAI client
 @st.cache_resource
 def get_openai_client():
