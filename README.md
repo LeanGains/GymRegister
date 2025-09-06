@@ -66,19 +66,47 @@ GymRegister leverages scanning technology to provide:
 3. **Issue Reporting**: Flag missing or damaged equipment immediately
 4. **Audit Participation**: Assist with comprehensive inventory checks
 
-## 🔍 Scanning Technology Integration
+## 🔍 AI-Powered Scanning Technology
 
-### Current Asset Tag Support
-- **Barcode Scanning**: Compatible with existing linear barcodes
-- **Asset Number Recognition**: OCR for text-based asset tags
-- **Batch Scanning**: Process multiple items quickly
-- **Offline Capability**: Continue scanning without internet connection
+### Current Capabilities
+- **AI Equipment Detection**: GPT-4o Vision automatically identifies gym equipment from photos
+- **Asset Tag Recognition**: Advanced OCR and text recognition for existing tags
+- **Condition Assessment**: AI-powered evaluation of equipment condition
+- **Weight/Spec Extraction**: Automatic identification of equipment specifications
+- **Smart Suggestions**: AI generates asset tags for untagged equipment
 
-### Future QR Code Migration
-- **Easy Upgrade Path**: Seamless transition to QR codes when ready
-- **Enhanced Data Storage**: More information per tag
-- **Faster Scanning**: Improved scan speed and accuracy
-- **Custom QR Generation**: Create facility-specific QR codes
+### REST API Integration
+- **Modern Architecture**: FastAPI backend with comprehensive REST endpoints
+- **Real-time Processing**: Asynchronous image analysis with job tracking
+- **Scalable Design**: Built for high-volume scanning operations
+- **API Documentation**: Full OpenAPI/Swagger documentation available
+
+## 🏗️ Technical Architecture
+
+### Backend (FastAPI)
+- **REST API**: Comprehensive endpoints for all operations
+- **Database**: SQLAlchemy with SQLite/PostgreSQL support
+- **AI Integration**: OpenAI GPT-4o Vision for image analysis
+- **Authentication**: API Key and Bearer token support
+- **Documentation**: Interactive API docs at `/docs`
+
+### Key API Endpoints
+```bash
+# Asset Management
+GET/POST/PUT/DELETE /api/assets     # Full CRUD operations
+PATCH /api/assets/{tag}/location    # Quick location updates
+
+# AI Analysis
+POST /api/analyze                   # Submit images for analysis
+GET /api/analyze/{job_id}          # Get analysis results
+GET /api/analysis/history          # Analysis history
+
+# Reports & Analytics
+GET /api/reports/statistics        # Comprehensive statistics
+GET /api/reports/export           # CSV data export
+GET /api/reports/missing          # Missing equipment
+GET /api/reports/repair           # Maintenance needed
+```
 
 ## 🏋️ Gym Layout Optimization
 
