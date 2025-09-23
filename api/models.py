@@ -23,6 +23,7 @@ class Asset(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     notes = Column(Text, nullable=True)
+    metadata = Column(JSON, nullable=True)  # Additional metadata field matching schema
 
 class AnalysisHistory(Base):
     __tablename__ = "analysis_history"
