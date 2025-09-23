@@ -30,6 +30,13 @@ async def lifespan(app: FastAPI):
     create_tables()
     logger.info("Database tables created/verified")
     
+    # Run database migrations
+    if migrate_add_metadata_column:
+        try:
+            migrate_add_metadata_column()
+        except Exception as e:
+            logger.warning(f"Migration warning: {str(e)}")
+    
     # Ensure upload directory exists
     os.makedirs(settings.upload_dir, exist_ok=True)
     logger.info(f"Upload directory ready: {settings.upload_dir}")
