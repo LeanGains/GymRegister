@@ -108,8 +108,8 @@ class AssetService:
             return {"items": items, "total": total}
             
         except Exception as e:
-            # Log the error (in a real app you'd use proper logging)
-            print(f"Error in get_assets: {str(e)}")
+            # Log the error with proper logging
+            logger.error(f"Error in get_assets: {str(e)}")
             # Return empty result with error info
             return {"items": [], "total": 0, "error": str(e)}
     
