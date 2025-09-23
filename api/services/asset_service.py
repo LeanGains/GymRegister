@@ -3,9 +3,12 @@ from sqlalchemy import func, or_
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+import logging
 
 from api.models import Asset
 from api.schemas import AssetCreate, AssetUpdate
+
+logger = logging.getLogger(__name__)
 
 
 class AssetService:
