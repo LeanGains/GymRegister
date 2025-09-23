@@ -10,7 +10,7 @@ from api.config import settings
 from api.database import create_tables
 from api.routers import assets, analysis, reports
 
-# Import migration function
+# Import migration function for asset_metadata column (fixes SQLAlchemy reserved name issue)
 try:
     from api.migrations.add_metadata_to_assets import migrate_add_metadata_column
 except ImportError:
