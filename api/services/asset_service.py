@@ -21,9 +21,12 @@ class AssetService:
             asset_dict['asset_tag'] = asset_dict['asset_tag'].upper()
             asset_dict['last_seen'] = datetime.utcnow()
             
-            # Handle metadata field if provided
-            if 'metadata' not in asset_dict or asset_dict['metadata'] is None:
-                asset_dict['metadata'] = {}
+            # Handle metadata field - rename to asset_metadata for SQLAlchemy
+            if 'metadata' in asset_dict:
+                asset_dict['asset_metadata'] = asset_dict.pop('metadata', {})
+            
+            if 'asset_metadata' not in asset_dict or asset_dict['asset_metadata'] is None:
+                asset_dict['asset_metadata'] = {}
             
             db_asset = Asset(**asset_dict)
             db.add(db_asset)
