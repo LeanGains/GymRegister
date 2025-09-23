@@ -61,18 +61,37 @@ async def get_assets(
 ):
     """Get paginated list of assets with optional filtering"""
     
-    result = AssetService.get_assets(
-        db=db,
-        skip=skip,
-        limit=limit,
-        status=status,
-        condition=condition,
-        item_type=item_type,
-        location=location,
-        search=search
-    )
-    
-    return result["items"]
+    try:
+        result = AssetService.get_assets(
+            db=db,
+            skip=skip,
+            limit=limit,
+            status=status,
+            condition=condition,
+            item_type=item_type,
+            location=location,
+            search=search
+        )
+        
+        # Ensure we have a valid result with items
+        if not isinstance(result, dict) or "items" not in result:
+            raise HTTPException(
+                status_code=500, 
+                detail="Invalid response format from asset service"
+            )
+        
+        # Return the list of assets
+        return result["items"]
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Log the error and raise HTTP exception
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve assets: {str(e)}"
+        )
 
 @router.get("/{asset_tag}", response_model=AssetOut)
 async def get_asset(
