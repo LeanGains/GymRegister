@@ -1,6 +1,7 @@
 """
-Migration script to add metadata column to existing assets table
-Run this when upgrading from older versions without the metadata field
+Migration script to add asset_metadata column to existing assets table
+This migration handles the SQLAlchemy reserved name issue by renaming 'metadata' to 'asset_metadata'
+Run this when upgrading from older versions or fixing the SQLAlchemy reserved name conflict
 """
 
 from sqlalchemy import create_engine, text, inspect
