@@ -10,6 +10,12 @@ from api.config import settings
 from api.database import create_tables
 from api.routers import assets, analysis, reports
 
+# Import migration function
+try:
+    from api.migrations.add_metadata_to_assets import migrate_add_metadata_column
+except ImportError:
+    migrate_add_metadata_column = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
