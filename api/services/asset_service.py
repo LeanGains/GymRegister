@@ -46,20 +46,20 @@ class AssetService:
     ) -> Dict[str, Any]:
         """Get paginated list of assets with optional filtering"""
         query = db.query(Asset)
-        
+
         # Apply filters
         if status:
             query = query.filter(Asset.status == status)
-        
+
         if condition:
             query = query.filter(Asset.condition == condition)
-        
+
         if item_type:
             query = query.filter(Asset.item_type == item_type)
-        
+
         if location:
             query = query.filter(Asset.location.ilike(f"%{location}%"))
-        
+
         if search:
             search_term = f"%{search}%"
             query = query.filter(
@@ -70,13 +70,26 @@ class AssetService:
                     Asset.location.ilike(search_term)
                 )
             )
-        
+
         # Get total count
         total = query.count()
-        
+
         # Apply pagination and ordering
-        items = query.order_by(Asset.updated_at.desc()).offset(skip).limit(limit).all()
-        
+        db_items = query.order_by(Asset.updated_at.desc()).offset(skip).limit(limit).all()
+
+        # Convert to Pydantic models, handling metadata properly
+        items = []
+        for db_item in db_items:
+            # Create a copy of the item's attributes
+            item_data = {c.name: getattr(db_item, c.name) for c in db_item.__table__.columns}
+
+            # Fix the metadata field specifically
+            if 'metadata' in item_data and item_data['metadata'] is not None:
+                if not isinstance(item_data['metadata'], dict):
+                    item_data['metadata'] = {}
+
+            items.append(item_data)
+
         return {"items": items, "total": total}
     
     @staticmethod
