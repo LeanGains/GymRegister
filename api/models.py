@@ -23,7 +23,17 @@ class Asset(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     notes = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)  # Additional metadata field matching schema
+    asset_metadata = Column(JSON, nullable=True)  # Additional metadata field (renamed from metadata to avoid SQLAlchemy reserved name)
+    
+    @property
+    def metadata(self):
+        """Property to expose asset_metadata as metadata for API compatibility"""
+        return self.asset_metadata
+    
+    @metadata.setter
+    def metadata(self, value):
+        """Setter to allow setting metadata which maps to asset_metadata"""
+        self.asset_metadata = value
 
 class AnalysisHistory(Base):
     __tablename__ = "analysis_history"
