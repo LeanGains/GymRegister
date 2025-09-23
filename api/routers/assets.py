@@ -80,6 +80,13 @@ async def get_assets(
                 detail="Invalid response format from asset service"
             )
         
+        # Check if there was an error in the service layer
+        if "error" in result:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Service error: {result['error']}"
+            )
+        
         # Return the list of assets
         return result["items"]
         
