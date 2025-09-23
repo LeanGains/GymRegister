@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Float, Boolean
+from sqlalchemy import Column, String, DateTime, Text, JSON, Float
 from sqlalchemy.sql import func
-from .database import Base
+
 import uuid
 from datetime import datetime
+
+from api.database import Base
+
 
 class Asset(Base):
     __tablename__ = "assets"
@@ -20,7 +23,6 @@ class Asset(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     notes = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
 
 class AnalysisHistory(Base):
     __tablename__ = "analysis_history"

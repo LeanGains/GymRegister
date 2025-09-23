@@ -1,9 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
-from ..models import Asset
-from ..schemas import AssetCreate, AssetUpdate
+
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+
+from api.models import Asset
+from api.schemas import AssetCreate, AssetUpdate
+
 
 class AssetService:
     @staticmethod

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from ..database import get_db
-from ..schemas import AssetCreate, AssetUpdate, AssetOut, APIResponse
-from ..services.asset_service import AssetService
-from ..services.audit_service import AuditService
-from ..auth import require_auth
+
+from api.auth import require_auth
+from api.database import get_db
+from api.schemas import AssetCreate, AssetOut, AssetUpdate
+from api.services.asset_service import AssetService
+from api.services.audit_service import AuditService
 
 router = APIRouter(prefix="/api/assets", tags=["Assets"])
 
@@ -163,8 +164,8 @@ async def delete_asset(
 @router.patch("/{asset_tag}/location")
 async def update_asset_location(
     asset_tag: str,
-    location: str = Query(..., description="New location"),
     request: Request,
+    location: str = Query(..., description="New location"),
     db: Session = Depends(get_db),
     auth: dict = Depends(require_auth)
 ):

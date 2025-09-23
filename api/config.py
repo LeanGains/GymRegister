@@ -1,4 +1,4 @@
-import os
+
 from typing import Optional
 from pydantic_settings import BaseSettings
 from functools import lru_cache
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     # OpenAI Configuration
     openai_api_key: Optional[str] = None
-    openai_model: str = "gpt-4-vision-preview"
+    openai_model: str = "gpt-4o"
     
     # File Storage
     upload_dir: str = "./data/uploads"

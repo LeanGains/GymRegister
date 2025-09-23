@@ -64,6 +64,7 @@ class AIService:
 
     def analyze_gym_equipment(self, image_path: str, asset_tag: Optional[str] = None) -> Dict[str, Any]:
         """Use GPT-4o to detect both asset tags and equipment in gym images"""
+        global image
         try:
             # Load and process image
             if not os.path.exists(image_path):
@@ -78,37 +79,37 @@ class AIService:
 
             prompt = """You are an expert gym equipment analyzer. Analyze this image and identify:
 
-1. Any asset tags, labels, barcodes, or identification codes on equipment
-2. All gym equipment visible with their weights/specifications
-3. Equipment condition if visible
-
-Return a JSON response with this exact structure:
-{
-  "asset_tags": [
-    {
-      "tag": "asset_tag_text",
-      "confidence": 0.95,
-      "location_description": "where on the equipment"
-    }
-  ],
-  "equipment": [
-    {
-      "type": "dumbbell/barbell_plate/kettlebell/medicine_ball/resistance_band/cable_attachment/bench/other",
-      "weight": "25 lbs" or "unknown",
-      "description": "detailed description",
-      "condition": "excellent/good/fair/poor/unknown",
-      "suggested_asset_tag": "suggested tag if no tag visible",
-      "location_in_image": "description of location in image"
-    }
-  ],
-  "image_quality": "excellent/good/fair/poor",
-  "total_items": 0,
-  "recommendations": "any suggestions for better detection"
-}
-
-Be thorough but concise. If you see multiple identical items (like a rack of dumbbells), list each separately.
-For asset tags, look for any text/codes that could be used for tracking - stickers, engraved text, barcodes, etc.
-For equipment, be specific about weights and types."""
+                        1. Any asset tags, labels, barcodes, or identification codes on equipment
+                        2. All gym equipment visible with their weights/specifications
+                        3. Equipment condition if visible
+                        
+                        Return a JSON response with this exact structure:
+                        {
+                          "asset_tags": [
+                            {
+                              "tag": "asset_tag_text",
+                              "confidence": 0.95,
+                              "location_description": "where on the equipment"
+                            }
+                          ],
+                          "equipment": [
+                            {
+                              "type": "dumbbell/barbell_plate/kettlebell/medicine_ball/resistance_band/cable_attachment/bench/other",
+                              "weight": "25 lbs" or "unknown",
+                              "description": "detailed description",
+                              "condition": "excellent/good/fair/poor/unknown",
+                              "suggested_asset_tag": "suggested tag if no tag visible",
+                              "location_in_image": "description of location in image"
+                            }
+                          ],
+                          "image_quality": "excellent/good/fair/poor",
+                          "total_items": 0,
+                          "recommendations": "any suggestions for better detection"
+                        }
+                        
+                        Be thorough but concise. If you see multiple identical items (like a rack of dumbbells), list each separately.
+                        For asset tags, look for any text/codes that could be used for tracking - stickers, engraved text, barcodes, etc.
+                        For equipment, be specific about weights and types."""
 
             # Use GPT-4o model
             response = self.client.chat.completions.create(
@@ -136,7 +137,7 @@ For equipment, be specific about weights and types."""
 
             # Parse JSON response
             try:
-                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                json_match = re.search(r'\{.*}', content, re.DOTALL)
                 if json_match:
                     result = json.loads(json_match.group())
                     

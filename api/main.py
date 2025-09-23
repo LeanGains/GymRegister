@@ -1,12 +1,14 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from .database import create_tables
-from .routers import assets, analysis, reports
-from .config import settings
+
 import os
 import logging
+
+from api.config import settings
+from api.database import create_tables
+from api.routers import assets, analysis, reports
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
