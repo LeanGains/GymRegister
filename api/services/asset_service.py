@@ -45,39 +45,61 @@ class AssetService:
         search: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get paginated list of assets with optional filtering"""
-        query = db.query(Asset)
-        
-        # Apply filters
-        if status:
-            query = query.filter(Asset.status == status)
-        
-        if condition:
-            query = query.filter(Asset.condition == condition)
-        
-        if item_type:
-            query = query.filter(Asset.item_type == item_type)
-        
-        if location:
-            query = query.filter(Asset.location.ilike(f"%{location}%"))
-        
-        if search:
-            search_term = f"%{search}%"
-            query = query.filter(
-                or_(
-                    Asset.asset_tag.ilike(search_term),
-                    Asset.name.ilike(search_term),
-                    Asset.description.ilike(search_term),
-                    Asset.location.ilike(search_term)
+        try:
+            # Validate database session
+            if not db:
+                raise ValueError("Database session is not available")
+            
+            # Start building query
+            query = db.query(Asset)
+            
+            # Apply filters
+            if status:
+                query = query.filter(Asset.status == status)
+            
+            if condition:
+                query = query.filter(Asset.condition == condition)
+            
+            if item_type:
+                query = query.filter(Asset.item_type == item_type)
+            
+            if location:
+                query = query.filter(Asset.location.ilike(f"%{location}%"))
+            
+            if search:
+                search_term = f"%{search}%"
+                query = query.filter(
+                    or_(
+                        Asset.asset_tag.ilike(search_term),
+                        Asset.name.ilike(search_term),
+                        Asset.description.ilike(search_term),
+                        Asset.location.ilike(search_term)
+                    )
                 )
-            )
-        
-        # Get total count
-        total = query.count()
-        
-        # Apply pagination and ordering
-        items = query.order_by(Asset.updated_at.desc()).offset(skip).limit(limit).all()
-        
-        return {"items": items, "total": total}
+            
+            # Get total count before applying pagination
+            try:
+                total = query.count()
+            except Exception as e:
+                raise ValueError(f"Failed to count assets: {str(e)}")
+            
+            # Apply pagination and ordering
+            try:
+                items = query.order_by(Asset.updated_at.desc()).offset(skip).limit(limit).all()
+            except Exception as e:
+                raise ValueError(f"Failed to retrieve assets: {str(e)}")
+            
+            # Ensure items is a list
+            if items is None:
+                items = []
+            
+            return {"items": items, "total": total}
+            
+        except Exception as e:
+            # Log the error (in a real app you'd use proper logging)
+            print(f"Error in get_assets: {str(e)}")
+            # Return empty result with error info
+            return {"items": [], "total": 0, "error": str(e)}
     
     @staticmethod
     def update_asset(db: Session, asset_tag: str, asset_update: AssetUpdate) -> Optional[Asset]:
