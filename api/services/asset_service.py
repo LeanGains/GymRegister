@@ -12,16 +12,25 @@ class AssetService:
     @staticmethod
     def create_asset(db: Session, asset_data: AssetCreate) -> Asset:
         """Create a new asset"""
-        # Convert Pydantic model to dict
-        asset_dict = asset_data.dict()
-        asset_dict['asset_tag'] = asset_dict['asset_tag'].upper()
-        asset_dict['last_seen'] = datetime.utcnow()
-        
-        db_asset = Asset(**asset_dict)
-        db.add(db_asset)
-        db.commit()
-        db.refresh(db_asset)
-        return db_asset
+        try:
+            # Convert Pydantic model to dict
+            asset_dict = asset_data.dict()
+            asset_dict['asset_tag'] = asset_dict['asset_tag'].upper()
+            asset_dict['last_seen'] = datetime.utcnow()
+            
+            # Handle metadata field if provided
+            if 'metadata' not in asset_dict or asset_dict['metadata'] is None:
+                asset_dict['metadata'] = {}
+            
+            db_asset = Asset(**asset_dict)
+            db.add(db_asset)
+            db.commit()
+            db.refresh(db_asset)
+            return db_asset
+            
+        except Exception as e:
+            db.rollback()
+            raise ValueError(f"Failed to create asset: {str(e)}")
     
     @staticmethod
     def get_asset_by_tag(db: Session, asset_tag: str) -> Optional[Asset]:
